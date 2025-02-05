@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Metas</title>
+    <title>Calculadora de Metas - Visão Anual</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
-        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        table { width: 90%; margin: 20px auto; border-collapse: collapse; }
         th, td { border: 1px solid black; padding: 10px; text-align: center; }
         input { width: 80px; text-align: center; }
     </style>
@@ -14,16 +14,19 @@
 <body>
 
     <h2>Calculadora de Objetivo Futuro</h2>
-    <table>
+    <table id="tabela-metas">
         <thead>
             <tr>
                 <th>Indicador</th>
-                <th>Ano</th>
-                <th>Meta (%)</th>
-                <th>Objetivo Futuro (%)</th>
+                <th>Meta Inicial (2025)</th>
+                <th>2026</th>
+                <th>2027</th>
+                <th>2028</th>
+                <th>2029</th>
+                <th>2030</th>
             </tr>
         </thead>
-        <tbody id="tabela-metas"></tbody>
+        <tbody></tbody>
     </table>
 
     <script>
@@ -38,44 +41,37 @@
             { nome: "% Atendimento Orçamento", taxa: 0.02 } // 2% ao ano
         ];
 
-        const tabela = document.getElementById("tabela-metas");
+        const tabela = document.querySelector("#tabela-metas tbody");
         const anoInicial = 2025;
-        const anos = 6; // Até 2030
+        const anos = [2026, 2027, 2028, 2029, 2030];
 
         // Criar as linhas da tabela
         indicadores.forEach(indicador => {
-            for (let i = 0; i < anos; i++) {
-                let ano = anoInicial + i;
+            let row = document.createElement("tr");
+            row.innerHTML = `<td>${indicador.nome}</td> 
+                             <td><input type="number" step="0.01" class="meta-input" data-indicador="${indicador.nome}"></td>`;
 
-                let row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${i === 0 ? indicador.nome : ''}</td>
-                    <td>${ano}</td>
-                    <td><input type="number" step="0.01" class="meta-input" data-indicador="${indicador.nome}" data-ano="${ano}"></td>
-                    <td id="objetivo-${indicador.nome}-${ano}">-</td>
-                `;
-                tabela.appendChild(row);
-            }
+            // Criar células para cada ano futuro
+            anos.forEach(ano => {
+                row.innerHTML += `<td id="objetivo-${indicador.nome}-${ano}">-</td>`;
+            });
+
+            tabela.appendChild(row);
         });
 
-        // Atualiza a coluna "Objetivo Futuro" conforme o usuário insere as metas
+        // Atualiza os valores automaticamente
         document.querySelectorAll(".meta-input").forEach(input => {
             input.addEventListener("input", function () {
                 const indicadorNome = this.getAttribute("data-indicador");
-                const ano = parseInt(this.getAttribute("data-ano"));
                 const meta = parseFloat(this.value);
                 const taxa = indicadores.find(i => i.nome === indicadorNome).taxa;
 
-                // Cálculo do objetivo futuro: Meta * (1 + taxa)^anos_passados
-                for (let i = 0; i < anos; i++) {
-                    let anoAtual = anoInicial + i;
-                    let objetivoCelula = document.getElementById(`objetivo-${indicadorNome}-${anoAtual}`);
-
-                    if (anoAtual >= ano) {
-                        let anosPassados = anoAtual - ano;
+                if (!isNaN(meta)) {
+                    anos.forEach((ano, index) => {
+                        let anosPassados = index + 1; // 2026 é 1 ano depois de 2025, 2027 é 2 anos, etc.
                         let objetivoFuturo = meta * Math.pow(1 + taxa, anosPassados);
-                        objetivoCelula.textContent = objetivoFuturo.toFixed(2) + "%";
-                    }
+                        document.getElementById(`objetivo-${indicadorNome}-${ano}`).textContent = objetivoFuturo.toFixed(2) + "%";
+                    });
                 }
             });
         });
